@@ -354,14 +354,19 @@ function renderCalendar() {
   const totalCount = logsThisMonth.length;
   document.getElementById('monthly-count').textContent = totalCount;
 
-  // monthly tags
+  // monthly tags - group by typeId
   const tagsEl = document.getElementById('monthly-tags');
   tagsEl.innerHTML = '';
-  workoutTypes.forEach(t => {
-    const count = logsThisMonth.filter(l => l.typeId === t.id).length;
-    if (!count) return;
+  const typeMap = {};
+  logsThisMonth.forEach(l => {
+    const key = l.typeId;
+    if (!typeMap[key]) typeMap[key] = { color: l.typeColor, label: l.typeLabel, count: 0 };
+    typeMap[key].count++;
+  });
+  Object.values(typeMap).forEach(t => {
+    const displayLabel = t.id === 'other' ? '기타' : t.label;
     tagsEl.innerHTML += `<div class="type-tag" style="background:${t.color}22;color:${t.color}">
-      <div class="type-dot" style="background:${t.color}"></div>${t.label} ${count}
+      <div class="type-dot" style="background:${t.color}"></div>${displayLabel} ${t.count}
     </div>`;
   });
   if (!totalCount) tagsEl.innerHTML = '<span style="font-size:12px;color:#6b7280">기록 없음</span>';
@@ -522,7 +527,7 @@ function updateSaveBtn() {
 function saveLog() {
   const place = formPlace === '기타' ? document.getElementById('custom-place-input').value.trim() : formPlace;
   const typeLabel = formType === '기타' ? document.getElementById('custom-type-input').value.trim() : formType;
-  const typeObj = workoutTypes.find(t => t.label === typeLabel) || { id: 'custom', label: typeLabel, color: '#EAB308' };
+  const typeObj = workoutTypes.find(t => t.label === typeLabel) || workoutTypes.find(t => t.id === 'other') || { id: 'other', label: '기타', color: '#EAB308' };
   const note = document.getElementById('form-note').value;
 
   if (editingLogId) {
@@ -653,4 +658,3 @@ renderCalendar();
 </script>
 </body>
 </html>
-
